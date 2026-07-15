@@ -1,0 +1,73 @@
+name: New dumper repo
+description: Suggest a public git repository that dumps Roblox FFlag offsets.
+title: "[dumper-repo] "
+labels: ["dumper-repo"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks! We archive public dumper source code so builds and behavior stay reproducible.
+
+  - type: input
+    id: repo_url
+    attributes:
+      label: Repository URL
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+
+  - type: input
+    id: default_branch
+    attributes:
+      label: Default branch (optional)
+      description: If not `main`, tell us the branch we should snapshot from.
+      placeholder: master
+
+  - type: input
+    id: emits_url
+    attributes:
+      label: Emits a public endpoint at (optional)
+      description: If the repo also publishes a runtime endpoint, link it here.
+      placeholder: https://raw.githubusercontent.com/owner/repo/main/FFlags.hpp
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - "C++"
+        - "C#/.NET"
+        - "Python"
+        - "Rust"
+        - "Web / TypeScript"
+        - "Other"
+
+  - type: dropdown
+    id: dumper_type
+    attributes:
+      label: Dumper type
+      options:
+        - "External (attaches to running Roblox process memory)"
+        - "Static (parses shipped RobloxPlayerBeta.exe)"
+        - "Symbol/PDB-based"
+        - "Other / unknown"
+
+  - type: input
+    id: credit_handle
+    attributes:
+      label: Credit handle (optional)
+      placeholder: "@your-handle"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Update cadence, quirks, known-broken versions, license concerns, etc.
+
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Confirmations
+      options:
+        - label: The repository is public and its LICENSE allows redistribution of the snapshot.
+          required: true

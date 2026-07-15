@@ -29,6 +29,43 @@ Noncommercial mirror; upstream authors retain all rights.
 | Lonegwadiwaitor/roblox-offset-dumper | https://github.com/Lonegwadiwaitor/roblox-offset-dumper | C++ | `dumpers/Lonegwadiwaitor__roblox-offset-dumper/` |
 | NtReadVirtualMemory/Roblox-Offsets-Website | https://github.com/NtReadVirtualMemory/Roblox-Offsets-Website | Web | `dumpers/NtReadVirtualMemory__Roblox-Offsets-Website/` |
 
+## Contribute
+
+Have your own dumper, a private FFlag endpoint, or a public one that isn't
+listed? Anything from a raw `FFlags.hpp` URL to a full dumper repo, from a
+Discord-only paste to a self-hosted mirror — we want them all so American /
+region-blocked users have real fallbacks.
+
+The **primary contribution channel** while this repo is private is the public
+FFM repo's issue tracker. Two ready-made forms:
+
+- **New endpoint URL** — one HTTP(S) URL returning `FFlags.hpp` or
+  `Offsets.hpp` in either Format A (nested `FFlagList`) or Format B
+  (flat `FFlagOffsets`):
+  [File a new-offset-source issue](https://github.com/4anti/Roblox-Fastflag-Manager/issues/new?labels=offset-source&template=new-offset-source.yml)
+- **New dumper repo** — a GitHub (or other public git) repository that dumps
+  offsets, whether you wrote it or found it:
+  [File a new-dumper-repo issue](https://github.com/4anti/Roblox-Fastflag-Manager/issues/new?labels=dumper-repo&template=new-dumper-repo.yml)
+- **Private / sensitive endpoint** — please DM the maintainer on Discord
+  (`https://discord.gg/ECekjAkQu7`) before opening a public issue so the
+  URL never lands in the public tracker.
+
+What we do with a submission:
+
+1. Sanity-check the URL / repo: fetch, run FFM's `>=500 uintptr_t` +
+   `namespace FFlagOffsets` regex gate, confirm it parses in both formats.
+2. Cross-check the offsets against imtheo (Combined-repo CI does this
+   automatically) so we know the source isn't shipping garbage RVAs.
+3. If it passes, add it to `endpoints/` here and to the operational mirror
+   at [Roblox-Offsets-Combined](https://github.com/4anti/Roblox-Offsets-Combined).
+   FFM's fallback chain picks it up on the next release.
+4. Credit you in the folder README (`Contributed by @<your-handle>`) unless
+   you'd rather stay anonymous — say so in the issue.
+
+Once these mirror repos flip public (post-baseline analysis), issues here
+will be enabled directly and you'll be able to open them against
+`4anti/Roblox-Offsets-ALL` instead of the main FFM repo.
+
 ## Update cadence
 
 - `.github/workflows/mirror-all.yml` refreshes the `endpoints/*/` snapshots

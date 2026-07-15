@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Discord (private / sensitive submissions)
+    url: https://discord.gg/ECekjAkQu7
+    about: For private URLs, credentials, or anything that shouldn't be on a public issue tracker.
+  - name: Main FFM issue tracker
+    url: https://github.com/4anti/Roblox-Fastflag-Manager/issues
+    about: General FFM bugs, feature requests, or discussion.
