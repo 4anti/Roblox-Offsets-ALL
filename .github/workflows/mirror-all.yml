@@ -2,8 +2,8 @@ name: Mirror ALL
 
 on:
   schedule:
-    - cron: '37 */6 * * *'   # endpoints refresh (~every 6h, offset from Combined)
-    - cron: '0 5 * * 0'      # weekly dumper source snapshots (Sunday 05:00 UTC)
+    - cron: '17 */6 * * *'    # endpoints refresh (~every 6 hours)
+    - cron: '0 5 * * 0'       # weekly dumper source snapshots (Sunday 05:00 UTC)
   workflow_dispatch:
 
 concurrency:
@@ -23,11 +23,35 @@ jobs:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Fetch each endpoint snapshot
+      - name: Snapshot previous verified state
+        run: |
+          python3 - <<'PY'
+          import json, subprocess, pathlib, os
+          FOLDERS = ["imtheo", "imtheo-dev", "workers-dev",
+                     "ntreadvirtualmemory", "souloveryall"]
+          prev = {}
+          for folder in FOLDERS:
+              r = subprocess.run(
+                  ["git", "show", f"HEAD:endpoints/{folder}/meta.json"],
+                  capture_output=True,
+              )
+              if r.returncode == 0 and r.stdout:
+                  try:
+                      d = json.loads(r.stdout)
+                      prev[folder] = d.get("verified")
+                  except Exception:
+                      prev[folder] = "missing"
+              else:
+                  prev[folder] = "missing"
+          out = pathlib.Path(os.environ["RUNNER_TEMP"], "prev_verified.json")
+          out.write_text(json.dumps(prev))
+          PY
+
+      - name: Fetch each endpoint
         run: |
           set -u
           UA="FFM-Mirror/1.0"
-          # FOLDER|HPP_URL|JSON_URL_OR_EMPTY|HPP_FILENAME
+          NOW="$(date -u +%FT%TZ)"
           ROWS=(
             "imtheo|https://offsets.imtheo.lol/FFlags.hpp|https://offsets.imtheo.lol/FFlags.json|FFlags.hpp"
             "imtheo-dev|https://dev.imtheo.lol/Offsets/FFlags.hpp|https://dev.imtheo.lol/Offsets/FFlags.json|FFlags.hpp"
@@ -39,6 +63,9 @@ jobs:
             IFS='|' read -r folder hpp_url json_url hpp_name <<< "$row"
             target="endpoints/$folder"
             mkdir -p "$target"
+            sanity_passed="false"
+            flag_count=0
+            roblox_version=""
 
             if curl -fsSL --max-time 30 -A "$UA" -o "$target/$hpp_name.new" "$hpp_url"; then
               if [ -f "$target/$hpp_name.new" ]; then
@@ -49,6 +76,9 @@ jobs:
               fi
               if [ "$count" -ge 500 ] && grep -q "namespace FFlagOffsets" "$target/$hpp_name.new"; then
                 mv "$target/$hpp_name.new" "$target/$hpp_name"
+                sanity_passed="true"
+                flag_count="$count"
+                roblox_version=$(grep -oE 'version-[0-9a-f]+' "$target/$hpp_name" 2>/dev/null | head -1 || true)
                 echo "OK $folder ($count uintptr_t decls)"
               else
                 rm -f "$target/$hpp_name.new"
@@ -68,7 +98,239 @@ jobs:
                 echo "WARN $folder JSON failed"
               fi
             fi
+
+            env FOLDER="$folder" HPP_URL="$hpp_url" NOW="$NOW" \
+                ROBLOX_VERSION="$roblox_version" FLAG_COUNT="$flag_count" \
+                SANITY_PASSED="$sanity_passed" python3 - <<'PY'
+          import json, os, pathlib
+          d = {
+              "source_url": os.environ["HPP_URL"],
+              "fetched_at": os.environ["NOW"],
+              "roblox_version": os.environ["ROBLOX_VERSION"] or None,
+              "flag_count": int(os.environ["FLAG_COUNT"]),
+              "sanity_passed": os.environ["SANITY_PASSED"] == "true",
+          }
+          folder = os.environ["FOLDER"]
+          pathlib.Path("endpoints", folder, ".meta.sanity.json").write_text(json.dumps(d))
+          PY
           done
+
+      - name: Verify against imtheo + write meta.json
+        run: |
+          python3 - <<'PY'
+          import json, re, os, pathlib
+
+          FOLDERS = ["imtheo", "imtheo-dev", "workers-dev",
+                     "ntreadvirtualmemory", "souloveryall"]
+          HPP_NAME = {
+              "imtheo": "FFlags.hpp",
+              "imtheo-dev": "FFlags.hpp",
+              "workers-dev": "FFlags.hpp",
+              "ntreadvirtualmemory": "FFlags.hpp",
+              "souloveryall": "Offsets.hpp",
+          }
+          BASE = pathlib.Path("endpoints")
+
+          RX_UINTPTR = re.compile(rb"uintptr_t\s+(\w+)\s*=\s*0x([0-9a-fA-F]+)")
+          RX_FFLAGLIST_NAMESPACE = re.compile(rb"namespace\s+FFlagList\s*\{(.*?)\}", re.S)
+          RX_FFLAGOFFSETS_NAMESPACE = re.compile(rb"namespace\s+FFlagOffsets\s*\{(.*?)\}", re.S)
+          RX_VERSION = re.compile(rb"version-[0-9a-f]+")
+
+          STRUCT_ALIASES = {
+              "FFlagList": "Pointer",
+              "ValueGetSet": "ToFlag",
+              "FlagToValue": "ToValue",
+          }
+
+          def extract_struct_and_body(body):
+              m_a = RX_FFLAGLIST_NAMESPACE.search(body)
+              if m_a:
+                  struct = {}
+                  for nm, hx in RX_UINTPTR.findall(m_a.group(1)):
+                      struct.setdefault(nm.decode("ascii"), int(hx, 16))
+                  return struct, RX_FFLAGLIST_NAMESPACE.sub(b"", body)
+              m_b = RX_FFLAGOFFSETS_NAMESPACE.search(body)
+              if not m_b:
+                  return {}, body
+              struct = {}
+              for nm, hx in RX_UINTPTR.findall(m_b.group(1)):
+                  key = STRUCT_ALIASES.get(nm.decode("ascii"))
+                  if key:
+                      struct.setdefault(key, int(hx, 16))
+              return struct, RX_FFLAGOFFSETS_NAMESPACE.sub(b"", body)
+
+          def extract_flags(body):
+              _, stripped = extract_struct_and_body(body)
+              flags = {}
+              for nm, hx in RX_UINTPTR.findall(stripped):
+                  flags.setdefault(nm.decode("ascii"), int(hx, 16))
+              return flags
+
+          def extract_version(body):
+              m = RX_VERSION.search(body)
+              return m.group(0).decode("ascii") if m else None
+
+          def load_partial(folder):
+              p = BASE / folder / ".meta.sanity.json"
+              if not p.exists():
+                  return None
+              return json.loads(p.read_text())
+
+          def default_meta(partial):
+              base = dict(partial) if partial else {
+                  "source_url": None,
+                  "fetched_at": None,
+                  "roblox_version": None,
+                  "flag_count": 0,
+                  "sanity_passed": False,
+              }
+              base.update({
+                  "verified": None,
+                  "verification_reason": "no_data",
+                  "verification_report": {
+                      "intersection_size": None,
+                      "imtheo_version": None,
+                      "folder_version": None,
+                      "mismatched_struct_offsets": None,
+                      "rva_mismatch_rate": None,
+                      "samples": None,
+                  },
+              })
+              return base
+
+          def emit(folder, meta):
+              (BASE / folder / "meta.json").write_text(
+                  json.dumps(meta, indent=2, sort_keys=True) + "\n"
+              )
+              partial = BASE / folder / ".meta.sanity.json"
+              if partial.exists():
+                  partial.unlink()
+
+          imtheo_hpp_path = BASE / "imtheo" / "FFlags.hpp"
+          imtheo_present = imtheo_hpp_path.exists()
+          if imtheo_present:
+              imtheo_body = imtheo_hpp_path.read_bytes()
+              imtheo_struct, _ = extract_struct_and_body(imtheo_body)
+              imtheo_flags = extract_flags(imtheo_body)
+              imtheo_version = extract_version(imtheo_body)
+          else:
+              imtheo_body = None
+              imtheo_struct = {}
+              imtheo_flags = {}
+              imtheo_version = None
+
+          false_count = 0
+          results = {}
+
+          for folder in FOLDERS:
+              partial = load_partial(folder)
+              meta = default_meta(partial)
+              meta["verification_report"]["imtheo_version"] = imtheo_version
+              hpp_path = BASE / folder / HPP_NAME[folder]
+
+              if folder == "imtheo":
+                  if imtheo_present:
+                      meta["verified"] = True
+                      meta["verification_reason"] = "source_of_truth"
+                      meta["verification_report"]["intersection_size"] = len(imtheo_flags)
+                      meta["verification_report"]["folder_version"] = imtheo_version
+                  else:
+                      meta["verified"] = None
+                      meta["verification_reason"] = "no_data"
+                  results[folder] = meta
+                  emit(folder, meta)
+                  continue
+
+              if not imtheo_present:
+                  meta["verified"] = None
+                  meta["verification_reason"] = "imtheo_baseline_missing"
+                  results[folder] = meta
+                  emit(folder, meta)
+                  continue
+
+              if not hpp_path.exists():
+                  meta["verified"] = None
+                  meta["verification_reason"] = "no_data"
+                  results[folder] = meta
+                  emit(folder, meta)
+                  continue
+
+              body = hpp_path.read_bytes()
+              folder_struct, _ = extract_struct_and_body(body)
+              folder_flags = extract_flags(body)
+              folder_version = extract_version(body)
+              meta["verification_report"]["folder_version"] = folder_version
+
+              # Version-skew short-circuit: if both HPPs advertise a Roblox
+              # version comment AND they differ, all RVA-level disagreements
+              # are expected (RVAs change every build). Mark null so this
+              # folder cascades in FFM's chain without polluting the quorum.
+              if imtheo_version and folder_version and imtheo_version != folder_version:
+                  meta["verified"] = None
+                  meta["verification_reason"] = "version_skew"
+                  results[folder] = meta
+                  emit(folder, meta)
+                  continue
+
+              mismatched = {}
+              for key in ("Pointer", "ToFlag", "ToValue"):
+                  a = imtheo_struct.get(key)
+                  b = folder_struct.get(key)
+                  if a is not None and b is not None and a != b:
+                      mismatched[key] = {"imtheo": hex(a), "folder": hex(b)}
+              if mismatched:
+                  meta["verified"] = False
+                  meta["verification_reason"] = "struct_offset_mismatch"
+                  meta["verification_report"]["mismatched_struct_offsets"] = mismatched
+                  false_count += 1
+                  results[folder] = meta
+                  emit(folder, meta)
+                  continue
+
+              common = set(imtheo_flags) & set(folder_flags)
+              inter = len(common)
+              meta["verification_report"]["intersection_size"] = inter
+              if inter < 500:
+                  meta["verified"] = None
+                  meta["verification_reason"] = "insufficient_overlap"
+                  results[folder] = meta
+                  emit(folder, meta)
+                  continue
+
+              matches = sum(1 for k in common if imtheo_flags[k] == folder_flags[k])
+              rate = 1.0 - matches / inter
+              meta["verification_report"]["rva_mismatch_rate"] = rate
+              if matches / inter < 0.99:
+                  samples = []
+                  for k in common:
+                      if imtheo_flags[k] != folder_flags[k]:
+                          samples.append([k, hex(imtheo_flags[k]), hex(folder_flags[k])])
+                          if len(samples) >= 20:
+                              break
+                  meta["verified"] = False
+                  meta["verification_reason"] = f"rva_mismatch_rate_{int(rate*100)}pct"
+                  meta["verification_report"]["samples"] = samples
+                  false_count += 1
+                  results[folder] = meta
+                  emit(folder, meta)
+                  continue
+
+              meta["verified"] = True
+              meta["verification_reason"] = "matches_imtheo"
+              results[folder] = meta
+              emit(folder, meta)
+
+          if false_count >= 3 and imtheo_present:
+              imtheo_meta = results["imtheo"]
+              imtheo_meta["verified"] = None
+              imtheo_meta["verification_reason"] = "quorum_disagreement"
+              (BASE / "imtheo" / "meta.json").write_text(
+                  json.dumps(imtheo_meta, indent=2, sort_keys=True) + "\n"
+              )
+              pathlib.Path(os.environ["RUNNER_TEMP"], "verification_alert").write_text(
+                  "imtheo_may_be_wrong\n"
+              )
+          PY
 
       - name: Commit if changed
         run: |
@@ -79,7 +341,35 @@ jobs:
             echo "No change since last run."
             exit 0
           fi
-          git commit -m "chore(mirror): refresh endpoint snapshots [skip ci]"
+          body_file="$(mktemp)"
+          RUNNER_TEMP_DIR="$RUNNER_TEMP" python3 - "$body_file" <<'PY'
+          import json, pathlib, sys, os
+          FOLDERS = ["imtheo", "imtheo-dev", "workers-dev",
+                     "ntreadvirtualmemory", "souloveryall"]
+          prev_path = pathlib.Path(os.environ["RUNNER_TEMP_DIR"], "prev_verified.json")
+          prev = json.loads(prev_path.read_text()) if prev_path.exists() else {}
+          body_lines = []
+          for folder in FOLDERS:
+              p = pathlib.Path("endpoints", folder, "meta.json")
+              if not p.exists():
+                  continue
+              cur_data = json.loads(p.read_text())
+              cur = cur_data.get("verified")
+              old = prev.get(folder, "missing")
+              if cur != old:
+                  reason = cur_data.get("verification_reason", "")
+                  body_lines.append(f"verification: {folder}={old}->{cur} ({reason})")
+          alert_path = pathlib.Path(os.environ["RUNNER_TEMP_DIR"], "verification_alert")
+          if alert_path.exists():
+              body_lines.append("verification_alert: imtheo_may_be_wrong")
+          pathlib.Path(sys.argv[1]).write_text("\n".join(body_lines))
+          PY
+          body_content=$(cat "$body_file")
+          if [ -n "$body_content" ]; then
+            git commit -m "chore(mirror): refresh endpoints [skip ci]" -m "$body_content"
+          else
+            git commit -m "chore(mirror): refresh endpoints [skip ci]"
+          fi
           git push origin main
 
   snapshot:
@@ -132,8 +422,6 @@ jobs:
               license_spdx="NOASSERTION"
             fi
 
-            # Skip snapshot leg if upstream license is unknown/proprietary.
-            # Allowlist: permissive + weak/strong copyleft + CC + public domain.
             suppress=false
             case "$license_spdx" in
               MIT|BSD-2-Clause|BSD-3-Clause|BSD-4-Clause|Apache-2.0|MPL-2.0|ISC|Unlicense|CC0-1.0|WTFPL|Zlib) suppress=false ;;
