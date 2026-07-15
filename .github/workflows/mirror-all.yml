@@ -392,13 +392,12 @@ jobs:
         run: |
           set -u
           DUMPERS=(
-            "pizzaboxer|rbxfflagdumper|C++ external dumper - reads Roblox process memory to emit FFlags.hpp"
-            "Srungot|FFlags-dumper-roblox|Python dumper - resolves FFlag pointers via PDB symbols and emits HPP/JSON"
-            "nopjo|roblox-dumper|Python multi-tool dumper - supports flags, structs, and metadata dumps"
-            "henrick001|External-Dumper|C++ external dumper focused on FFlagList struct layout"
-            "nhisoka|Roblox-Offset-Dumper|C++ dumper - emits Format B FFlags.hpp"
-            "Lonegwadiwaitor|roblox-offset-dumper|C++ CLI dumper - writes offsets to stdout / files"
-            "NtReadVirtualMemory|Roblox-Offsets-Website|Web front-end + emitter - publishes FFlags.hpp on main"
+            "pizzaboxer|rbxfflagdumper|.NET suite for statically dumping Roblox engine FastFlags"
+            "Windows81|Roblox-FFlag-Dumper|.NET fork of rbxfflagdumper with additional targets"
+            "nopjo|roblox-dumper|External offset dumper for Roblox"
+            "henrick001|External-Dumper|Roblox offset dumper for external offsets, easily extendable"
+            "Lonegwadiwaitor|roblox-offset-dumper|C++ offset dumper originally built for SirMeme Hub"
+            "NtReadVirtualMemory|Roblox-Offsets-Website|Web front-end that publishes FFlags.hpp on main"
           )
           NOW="$(date -u +%FT%TZ)"
           for row in "${DUMPERS[@]}"; do

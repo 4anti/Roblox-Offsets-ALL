@@ -47,11 +47,10 @@ Weekly source snapshots land under `dumpers/<owner>__<repo>/snapshot/`.
 
 | Repository | Language | Folder |
 | --- | --- | --- |
-| [pizzaboxer/rbxfflagdumper](https://github.com/pizzaboxer/rbxfflagdumper) | C++ | `dumpers/pizzaboxer__rbxfflagdumper/` |
-| [Srungot/FFlags-dumper-roblox](https://github.com/Srungot/FFlags-dumper-roblox) | Python | `dumpers/Srungot__FFlags-dumper-roblox/` |
-| [nopjo/roblox-dumper](https://github.com/nopjo/roblox-dumper) | Python | `dumpers/nopjo__roblox-dumper/` |
+| [pizzaboxer/rbxfflagdumper](https://github.com/pizzaboxer/rbxfflagdumper) | C# / .NET | `dumpers/pizzaboxer__rbxfflagdumper/` |
+| [Windows81/Roblox-FFlag-Dumper](https://github.com/Windows81/Roblox-FFlag-Dumper) | C# / .NET | `dumpers/Windows81__Roblox-FFlag-Dumper/` |
+| [nopjo/roblox-dumper](https://github.com/nopjo/roblox-dumper) | C++ | `dumpers/nopjo__roblox-dumper/` |
 | [henrick001/External-Dumper](https://github.com/henrick001/External-Dumper) | C++ | `dumpers/henrick001__External-Dumper/` |
-| [nhisoka/Roblox-Offset-Dumper](https://github.com/nhisoka/Roblox-Offset-Dumper) | C++ | `dumpers/nhisoka__Roblox-Offset-Dumper/` |
 | [Lonegwadiwaitor/roblox-offset-dumper](https://github.com/Lonegwadiwaitor/roblox-offset-dumper) | C++ | `dumpers/Lonegwadiwaitor__roblox-offset-dumper/` |
 | [NtReadVirtualMemory/Roblox-Offsets-Website](https://github.com/NtReadVirtualMemory/Roblox-Offsets-Website) | Web | `dumpers/NtReadVirtualMemory__Roblox-Offsets-Website/` |
 
