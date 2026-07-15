@@ -1,14 +1,14 @@
 {
-  "fetched_at": "2026-07-15T14:10:52Z",
+  "fetched_at": "2026-07-15T17:25:35Z",
   "flag_count": 13938,
   "roblox_version": "version-eb158392d1c84e6a",
   "sanity_passed": true,
   "source_url": "https://raw.githubusercontent.com/souloveryall/offsets.hpp/main/Offsets.hpp",
-  "verification_reason": "insufficient_overlap",
+  "verification_reason": "version_skew",
   "verification_report": {
     "folder_version": "version-eb158392d1c84e6a",
-    "imtheo_version": "version-eb158392d1c84e6a",
-    "intersection_size": 0,
+    "imtheo_version": "version-ddf02245bdbb428c",
+    "intersection_size": null,
     "mismatched_struct_offsets": null,
     "rva_mismatch_rate": null,
     "samples": null
