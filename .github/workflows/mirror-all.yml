@@ -1,0 +1,208 @@
+name: Mirror ALL
+
+on:
+  schedule:
+    - cron: '37 */6 * * *'   # endpoints refresh (~every 6h, offset from Combined)
+    - cron: '0 5 * * 0'      # weekly dumper source snapshots (Sunday 05:00 UTC)
+  workflow_dispatch:
+
+concurrency:
+  group: mirror-all
+  cancel-in-progress: false
+
+jobs:
+  endpoints:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch each endpoint snapshot
+        run: |
+          set -u
+          UA="FFM-Mirror/1.0"
+          # FOLDER|HPP_URL|JSON_URL_OR_EMPTY|HPP_FILENAME
+          ROWS=(
+            "imtheo|https://offsets.imtheo.lol/FFlags.hpp|https://offsets.imtheo.lol/FFlags.json|FFlags.hpp"
+            "imtheo-dev|https://dev.imtheo.lol/Offsets/FFlags.hpp|https://dev.imtheo.lol/Offsets/FFlags.json|FFlags.hpp"
+            "workers-dev|https://offsets.ntgetwritewatch.workers.dev/FFlags.hpp||FFlags.hpp"
+            "ntreadvirtualmemory|https://raw.githubusercontent.com/NtReadVirtualMemory/Roblox-Offsets-Website/main/FFlags.hpp||FFlags.hpp"
+            "souloveryall|https://raw.githubusercontent.com/souloveryall/offsets.hpp/main/Offsets.hpp||Offsets.hpp"
+          )
+          for row in "${ROWS[@]}"; do
+            IFS='|' read -r folder hpp_url json_url hpp_name <<< "$row"
+            target="endpoints/$folder"
+            mkdir -p "$target"
+
+            if curl -fsSL --max-time 30 -A "$UA" -o "$target/$hpp_name.new" "$hpp_url"; then
+              if [ -f "$target/$hpp_name.new" ]; then
+                count=$(grep -c "uintptr_t" "$target/$hpp_name.new" 2>/dev/null) || true
+                count=${count:-0}
+              else
+                count=0
+              fi
+              if [ "$count" -ge 500 ] && grep -q "namespace FFlagOffsets" "$target/$hpp_name.new"; then
+                mv "$target/$hpp_name.new" "$target/$hpp_name"
+                echo "OK $folder ($count uintptr_t decls)"
+              else
+                rm -f "$target/$hpp_name.new"
+                echo "WARN $folder failed sanity ($count uintptr_t decls)"
+              fi
+            else
+              echo "WARN $folder curl failed for $hpp_url"
+            fi
+
+            if [ -n "$json_url" ]; then
+              if curl -fsSL --max-time 30 -A "$UA" -o "$target/FFlags.json.new" "$json_url" \
+                 && python3 -c "import json; d=json.load(open('$target/FFlags.json.new')); n=d.get('Total Offsets'); assert isinstance(n,int) and n>=500"; then
+                mv "$target/FFlags.json.new" "$target/FFlags.json"
+                echo "OK $folder JSON"
+              else
+                rm -f "$target/FFlags.json.new"
+                echo "WARN $folder JSON failed"
+              fi
+            fi
+          done
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No change since last run."
+            exit 0
+          fi
+          git commit -m "chore(mirror): refresh endpoint snapshots [skip ci]"
+          git push origin main
+
+  snapshot:
+    needs: [endpoints]
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 5 * * 0'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Refresh dumper-source snapshots
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -u
+          DUMPERS=(
+            "pizzaboxer|rbxfflagdumper|C++ external dumper - reads Roblox process memory to emit FFlags.hpp"
+            "Srungot|FFlags-dumper-roblox|Python dumper - resolves FFlag pointers via PDB symbols and emits HPP/JSON"
+            "nopjo|roblox-dumper|Python multi-tool dumper - supports flags, structs, and metadata dumps"
+            "henrick001|External-Dumper|C++ external dumper focused on FFlagList struct layout"
+            "nhisoka|Roblox-Offset-Dumper|C++ dumper - emits Format B FFlags.hpp"
+            "Lonegwadiwaitor|roblox-offset-dumper|C++ CLI dumper - writes offsets to stdout / files"
+            "NtReadVirtualMemory|Roblox-Offsets-Website|Web front-end + emitter - publishes FFlags.hpp on main"
+          )
+          NOW="$(date -u +%FT%TZ)"
+          for row in "${DUMPERS[@]}"; do
+            IFS='|' read -r owner repo desc <<< "$row"
+            folder="dumpers/${owner}__${repo}"
+            mkdir -p "$folder"
+
+            default_branch=$(gh api "/repos/${owner}/${repo}" --jq .default_branch 2>/dev/null || echo "")
+            if [ -z "$default_branch" ]; then
+              echo "WARN $owner/$repo: repo lookup failed; skipping"
+              continue
+            fi
+            head_sha=$(gh api "/repos/${owner}/${repo}/commits/${default_branch}" --jq .sha 2>/dev/null || echo "")
+            if [ -z "$head_sha" ]; then
+              echo "WARN $owner/$repo: could not resolve head sha; skipping"
+              continue
+            fi
+
+            license_spdx=$(gh api "/repos/${owner}/${repo}/license" --jq .license.spdx_id 2>/dev/null || echo "NOASSERTION")
+            if [ -z "$license_spdx" ] || [ "$license_spdx" = "null" ]; then
+              license_spdx="NOASSERTION"
+            fi
+
+            # Skip snapshot leg if upstream license is unknown/proprietary.
+            # Allowlist: permissive + weak/strong copyleft + CC + public domain.
+            suppress=false
+            case "$license_spdx" in
+              MIT|BSD-2-Clause|BSD-3-Clause|BSD-4-Clause|Apache-2.0|MPL-2.0|ISC|Unlicense|CC0-1.0|WTFPL|Zlib) suppress=false ;;
+              GPL-2.0|GPL-3.0|GPL-2.0-only|GPL-2.0-or-later|GPL-3.0-only|GPL-3.0-or-later) suppress=false ;;
+              AGPL-3.0|AGPL-3.0-only|AGPL-3.0-or-later) suppress=false ;;
+              LGPL-2.1|LGPL-3.0|LGPL-2.1-only|LGPL-2.1-or-later|LGPL-3.0-only|LGPL-3.0-or-later) suppress=false ;;
+              "CC-BY-4.0"|"CC-BY-SA-4.0") suppress=false ;;
+              NOASSERTION) suppress=false ;;
+              *) suppress=true ;;
+            esac
+
+            tarball="$(mktemp --suffix=.tar.gz)"
+            fetched=false
+            if curl -fsSL --max-filesize 52428800 --max-time 120 \
+                -H "Authorization: token $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                -o "$tarball" \
+                "https://api.github.com/repos/${owner}/${repo}/tarball/${default_branch}"; then
+              fetched=true
+            else
+              echo "WARN $owner/$repo: tarball fetch failed (may exceed 50 MB or 404); skipping snapshot body"
+            fi
+
+            rm -rf "$folder/snapshot"
+            snapshot_note=""
+            if [ "$suppress" = "true" ]; then
+              snapshot_note="Snapshot suppressed - upstream license ${license_spdx}"
+              echo "SUPPRESS $owner/$repo: license $license_spdx"
+            elif [ "$fetched" = "true" ]; then
+              mkdir -p "$folder/snapshot"
+              if tar -xzf "$tarball" -C "$folder/snapshot" --strip-components=1 2>/dev/null; then
+                snapshot_note="Snapshotted from upstream ${default_branch}@${head_sha}"
+              else
+                rm -rf "$folder/snapshot"
+                snapshot_note="Snapshot extraction failed"
+              fi
+            else
+              snapshot_note="Snapshot fetch failed this run"
+            fi
+
+            env OWNER="$owner" REPO="$repo" DESC="$desc" LICENSE="$license_spdx" \
+                NOW="$NOW" HEAD_SHA="$head_sha" DEFAULT_BRANCH="$default_branch" \
+                NOTE="$snapshot_note" python3 - <<'PY'
+          import os, pathlib
+          folder = f"dumpers/{os.environ['OWNER']}__{os.environ['REPO']}"
+          readme = (
+              f"# {os.environ['OWNER']}/{os.environ['REPO']}\n\n"
+              f"Upstream: https://github.com/{os.environ['OWNER']}/{os.environ['REPO']}\n\n"
+              f"{os.environ['DESC']}\n\n"
+              f"Upstream license SPDX: {os.environ['LICENSE']}\n\n"
+              f"Last mirrored: {os.environ['NOW']}\n"
+              f"Upstream SHA: {os.environ['HEAD_SHA']}\n"
+              f"Default branch: {os.environ['DEFAULT_BRANCH']}\n\n"
+              f"{os.environ['NOTE']}\n"
+          )
+          pathlib.Path(folder, "README.md").write_text(readme)
+          PY
+
+            rm -f "$tarball"
+          done
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No change since last run."
+            exit 0
+          fi
+          git commit -m "chore(archive): weekly dumper-source snapshot [skip ci]"
+          git push origin main

@@ -16,7 +16,6 @@ Noncommercial mirror; upstream authors retain all rights.
 | workers.dev | https://offsets.ntgetwritewatch.workers.dev/FFlags.hpp | B (flat FFlagOffsets) | no | `endpoints/workers-dev/` |
 | NtReadVirtualMemory | https://raw.githubusercontent.com/NtReadVirtualMemory/Roblox-Offsets-Website/main/FFlags.hpp | B | rarely | `endpoints/ntreadvirtualmemory/` |
 | souloveryall | https://raw.githubusercontent.com/souloveryall/offsets.hpp/main/Offsets.hpp | B | rarely | `endpoints/souloveryall/` |
-| upio (macOS) | https://offsets.upio.dev/FFlags.hpp | B | no | `endpoints/upio-macos/` |
 
 ## Dumper source code
 
