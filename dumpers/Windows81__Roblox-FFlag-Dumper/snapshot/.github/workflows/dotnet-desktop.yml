@@ -1,0 +1,54 @@
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    steps:
+    - name: Get current datetime
+      run: echo "RELEASE_DATETIME=$(date +%Y%m%dT%H%MZ)" >> $GITHUB_ENV
+      shell: bash
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Restore NuGet packages
+      run: dotnet restore
+      
+    - name: Create the app package
+      run: msbuild . /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+      
+    - name: Copy EXE files
+      run: mkdir ./bin && ls "./*/bin/${{ matrix.configuration }}/Rbx*" |% {mv ($_.FullName) "./bin/$($_.BaseName).${{ matrix.configuration }}$($_.Extension)"}
+      env:
+        Configuration: ${{ matrix.configuration }}
+
+    - name: Create release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ./bin/*
+        name: ${{ env.RELEASE_DATETIME }}
+        tag_name: ${{ env.RELEASE_DATETIME }}
+        generate_release_notes: true

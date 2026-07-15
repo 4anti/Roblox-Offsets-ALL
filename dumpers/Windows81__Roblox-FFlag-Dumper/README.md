@@ -2,8 +2,12 @@
 
 Upstream: https://github.com/Windows81/Roblox-FFlag-Dumper
 
-.NET fork of pizzaboxer/rbxfflagdumper with additional targets. C# / .NET.
+.NET fork of rbxfflagdumper with additional targets
 
-Upstream license SPDX: _pending CI enrichment_.
+Upstream license SPDX: MIT
 
-Last mirrored: _pending first CI snapshot_
+Last mirrored: 2026-07-15T10:51:10Z
+Upstream SHA: ec74c6a6ac5a1579ecd0773bb7e96fa6c6b9b470
+Default branch: main
+
+Snapshotted from upstream main@ec74c6a6ac5a1579ecd0773bb7e96fa6c6b9b470
