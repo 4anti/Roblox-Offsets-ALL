@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks! We archive public dumper source code so builds and behavior stay reproducible.
+        We snapshot public dumper source so builds stay reproducible when upstream disappears.
 
   - type: input
     id: repo_url
@@ -62,12 +62,12 @@ body:
     id: notes
     attributes:
       label: Notes
-      description: Update cadence, quirks, known-broken versions, license concerns, etc.
+      description: Update cadence, known-broken versions, licence quirks, anything else.
 
   - type: checkboxes
     id: consent
     attributes:
       label: Confirmations
       options:
-        - label: The repository is public and its LICENSE allows redistribution of the snapshot.
+        - label: The repository is public and its licence allows redistribution of the snapshot.
           required: true
