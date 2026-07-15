@@ -2,8 +2,12 @@
 
 Upstream: https://github.com/pizzaboxer/rbxfflagdumper
 
-C++ external dumper — reads Roblox process memory to emit FFlags.hpp
+C++ external dumper - reads Roblox process memory to emit FFlags.hpp
 
-Upstream license SPDX: _pending CI enrichment_.
+Upstream license SPDX: MIT
 
-Last mirrored: _pending first CI snapshot_
+Last mirrored: 2026-07-15T01:40:57Z
+Upstream SHA: edf8450fb7460ae6ecd1b1942adce7039e1ab45c
+Default branch: main
+
+Snapshotted from upstream main@edf8450fb7460ae6ecd1b1942adce7039e1ab45c
