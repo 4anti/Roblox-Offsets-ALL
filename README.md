@@ -6,29 +6,25 @@
 
 <div align="center">
 
-**Public archive of Roblox FFlag offset dumpers.**
-
-Sister repo for [Roblox FastFlag Manager](https://github.com/4anti/Roblox-Fastflag-Manager).
+Companion repository for [Roblox FastFlag Manager](https://github.com/4anti/Roblox-Fastflag-Manager).
 
 </div>
 
----
+## Overview
 
-## What this is
+This repository archives publicly available Roblox FFlag offset sources. Its purpose is to give FFM users a working fallback when a particular dumper is unreachable due to regional blocks, downtime, or TLS interception. The layout is one folder per mirrored endpoint plus one folder per snapshotted dumper repository.
 
-One folder per public FFlag endpoint, one folder per public dumper repo. CI refreshes the endpoint snapshots every six hours and takes a full source snapshot of each dumper once a week. No user data, no telemetry, no runtime code. If someone geoblocks imtheo, FFM still has options.
+Endpoint folders are refreshed every six hours. Dumper source snapshots refresh once a week. Everything runs on GitHub Actions.
 
-## Contribute a source
+## Contribute
 
-If you run a dumper, host a mirror, or just know one that isn't here yet, please open an issue on the main FFM repo. There are ready-made forms:
+If you host a dumper, know one that is not listed, or want to share offsets you generated yourself, please open an issue on the main FFM repository:
 
-- [Add a new endpoint URL](https://github.com/4anti/Roblox-Fastflag-Manager/issues/new?labels=offset-source&template=new-offset-source.yml)
-- [Add a new dumper repo](https://github.com/4anti/Roblox-Fastflag-Manager/issues/new?labels=dumper-repo&template=new-dumper-repo.yml)
-- For private endpoints or anything you'd rather not post publicly, DM us on [Discord](https://discord.gg/ECekjAkQu7).
+- [New endpoint URL](https://github.com/4anti/Roblox-Fastflag-Manager/issues/new?labels=offset-source&template=new-offset-source.yml)
+- [New dumper repo](https://github.com/4anti/Roblox-Fastflag-Manager/issues/new?labels=dumper-repo&template=new-dumper-repo.yml)
+- Private or sensitive URLs: [Discord](https://discord.gg/ECekjAkQu7)
 
-Every submission is checked: fetch it, sanity gate it (at least 500 offsets, must contain `namespace FFlagOffsets`), and cross-check against imtheo. If it holds up, it goes into the operational mirror at [Roblox-Offsets-Combined](https://github.com/4anti/Roblox-Offsets-Combined) and starts feeding FFM's fallback chain on the next release. Happy to credit you in the folder README if you leave a handle.
-
----
+Submissions are fetched, sanity checked against a minimum size and a valid `namespace FFlagOffsets` block, and then cross checked against imtheo. Anything that passes is added to [Roblox-Offsets-Combined](https://github.com/4anti/Roblox-Offsets-Combined) and picked up by FFM's fallback chain on the next release. Contributors are credited in the folder README on request.
 
 ## Endpoints
 
@@ -40,11 +36,11 @@ Every submission is checked: fetch it, sanity gate it (at least 500 offsets, mus
 | NtReadVirtualMemory | https://raw.githubusercontent.com/NtReadVirtualMemory/Roblox-Offsets-Website/main/FFlags.hpp | B | `endpoints/ntreadvirtualmemory/` |
 | souloveryall | https://raw.githubusercontent.com/souloveryall/offsets.hpp/main/Offsets.hpp | B | `endpoints/souloveryall/` |
 
-## Dumper source repos
+## Dumper repositories
 
-Weekly source snapshots land in `dumpers/<owner>__<repo>/snapshot/`.
+Weekly source snapshots land under `dumpers/<owner>__<repo>/snapshot/`.
 
-| Repo | Language | Folder |
+| Repository | Language | Folder |
 | --- | --- | --- |
 | [pizzaboxer/rbxfflagdumper](https://github.com/pizzaboxer/rbxfflagdumper) | C++ | `dumpers/pizzaboxer__rbxfflagdumper/` |
 | [Srungot/FFlags-dumper-roblox](https://github.com/Srungot/FFlags-dumper-roblox) | Python | `dumpers/Srungot__FFlags-dumper-roblox/` |
@@ -54,12 +50,16 @@ Weekly source snapshots land in `dumpers/<owner>__<repo>/snapshot/`.
 | [Lonegwadiwaitor/roblox-offset-dumper](https://github.com/Lonegwadiwaitor/roblox-offset-dumper) | C++ | `dumpers/Lonegwadiwaitor__roblox-offset-dumper/` |
 | [NtReadVirtualMemory/Roblox-Offsets-Website](https://github.com/NtReadVirtualMemory/Roblox-Offsets-Website) | Web | `dumpers/NtReadVirtualMemory__Roblox-Offsets-Website/` |
 
----
+## Additional information
 
-## Details
+### Formats
 
-**Formats.** Format A means a nested `namespace FFlagList { ... }` inside `namespace FFlagOffsets`. Format B keeps flag entries flat inside `namespace FFlagOffsets`. FFM parses both.
+Format A places the flag table inside a nested `namespace FFlagList { ... }` block within `namespace FFlagOffsets`. Format B keeps every entry directly inside `namespace FFlagOffsets` with no nesting. FFM's parser accepts either.
 
-**Update cadence.** Endpoints refresh every 6 hours (`cron: 37 */6 * * *`). Dumper source snapshots refresh weekly (`cron: 0 5 * * 0`). Manual trigger: `gh workflow run mirror-all.yml -R 4anti/Roblox-Offsets-ALL`. Commits come from `github-actions[bot]`, which is how the Verified badge is server-signed.
+### Update cadence
 
-**Licenses.** Files that belong to this repo (README, workflows, layout) are under [PolyForm Noncommercial 1.0.0](LICENSE). Snapshotted dumper trees under `dumpers/<owner>__<repo>/snapshot/` keep their upstream licenses. Each folder's README carries the SPDX. If an upstream forbids redistribution the snapshot leg is skipped and the folder README says so.
+Endpoints are fetched on a `37 */6 * * *` cron. Dumper source snapshots run weekly on `0 5 * * 0`. Both can be triggered manually with `gh workflow run mirror-all.yml -R 4anti/Roblox-Offsets-ALL`. Every commit is made by `github-actions[bot]`, which is why the Verified badge is signed server side.
+
+### Licensing
+
+Files that belong to this repository (README, workflows, folder layout) are licensed under [PolyForm Noncommercial 1.0.0](LICENSE). Snapshotted dumper trees under `dumpers/<owner>__<repo>/snapshot/` remain governed by their upstream licenses. The SPDX identifier for each snapshot is listed in the folder's README. Snapshots are skipped when the upstream license prohibits redistribution, and the folder README says so.
