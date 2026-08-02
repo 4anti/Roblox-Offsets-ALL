@@ -6,8 +6,8 @@ External offset dumper for Roblox
 
 Upstream license SPDX: {"message":"Not Found","documentation_url":"https://docs.github.com/rest/licenses/licenses#get-the-license-for-a-repository","status":"404"}NOASSERTION
 
-Last mirrored: 2026-07-26T07:37:20Z
-Upstream SHA: 81c9f393138f45afe04f5179774aa8f768d17c41
+Last mirrored: 2026-08-02T07:33:12Z
+Upstream SHA: cbc2a65720b0a5c9209e6ade21b5879dc2154d8a
 Default branch: main
 
 Snapshot suppressed - upstream license {"message":"Not Found","documentation_url":"https://docs.github.com/rest/licenses/licenses#get-the-license-for-a-repository","status":"404"}NOASSERTION
