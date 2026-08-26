@@ -1,8 +1,8 @@
 {
-  "fetched_at": "2026-08-25T18:57:45Z",
-  "flag_count": 0,
+  "fetched_at": "2026-08-26T01:59:00Z",
+  "flag_count": 14280,
   "roblox_version": null,
-  "sanity_passed": false,
+  "sanity_passed": true,
   "source_url": "https://offsets.ntgetwritewatch.workers.dev/FFlags.hpp",
   "verification_reason": "matches_imtheo",
   "verification_report": {
