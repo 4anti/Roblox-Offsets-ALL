@@ -1,22 +1,17 @@
 {
-  "fetched_at": "2026-08-27T22:16:47Z",
-  "flag_count": 14280,
+  "fetched_at": "2026-08-28T11:25:05Z",
+  "flag_count": 14268,
   "roblox_version": null,
   "sanity_passed": true,
   "source_url": "https://raw.githubusercontent.com/NtReadVirtualMemory/Roblox-Offsets-Website/main/FFlags.hpp",
-  "verification_reason": "struct_offset_mismatch",
+  "verification_reason": "matches_imtheo",
   "verification_report": {
     "folder_version": null,
     "imtheo_version": "version-f5a60436d48947d3",
-    "intersection_size": null,
-    "mismatched_struct_offsets": {
-      "Pointer": {
-        "folder": "0x8390188",
-        "imtheo": "0x876ccc8"
-      }
-    },
-    "rva_mismatch_rate": null,
+    "intersection_size": 14265,
+    "mismatched_struct_offsets": null,
+    "rva_mismatch_rate": 0.0,
     "samples": null
   },
-  "verified": false
+  "verified": true
 }
