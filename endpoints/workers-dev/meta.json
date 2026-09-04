@@ -1,22 +1,17 @@
 {
-  "fetched_at": "2026-09-04T04:35:48Z",
-  "flag_count": 14268,
+  "fetched_at": "2026-09-04T11:19:47Z",
+  "flag_count": 14341,
   "roblox_version": null,
   "sanity_passed": true,
   "source_url": "https://offsets.ntgetwritewatch.workers.dev/FFlags.hpp",
-  "verification_reason": "struct_offset_mismatch",
+  "verification_reason": "matches_imtheo",
   "verification_report": {
     "folder_version": null,
     "imtheo_version": "version-e7d81637d42c4b23",
-    "intersection_size": null,
-    "mismatched_struct_offsets": {
-      "Pointer": {
-        "folder": "0x876ccc8",
-        "imtheo": "0x87ce5e0"
-      }
-    },
-    "rva_mismatch_rate": null,
+    "intersection_size": 14338,
+    "mismatched_struct_offsets": null,
+    "rva_mismatch_rate": 0.0,
     "samples": null
   },
-  "verified": false
+  "verified": true
 }
