@@ -6,7 +6,7 @@ Upstream: https://github.com/Windows81/Roblox-FFlag-Dumper
 
 Upstream license SPDX: MIT
 
-Last mirrored: 2026-09-13T10:03:22Z
+Last mirrored: 2026-09-20T09:38:36Z
 Upstream SHA: ec74c6a6ac5a1579ecd0773bb7e96fa6c6b9b470
 Default branch: main
 
