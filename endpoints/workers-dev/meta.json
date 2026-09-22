@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-22T11:40:41Z",
+  "fetched_at": "2026-09-22T16:58:24Z",
   "flag_count": 14341,
   "roblox_version": null,
   "sanity_passed": true,
@@ -7,12 +7,12 @@
   "verification_reason": "struct_offset_mismatch",
   "verification_report": {
     "folder_version": null,
-    "imtheo_version": "version-4310300497aa4917",
+    "imtheo_version": "version-2366ba214ec740ca",
     "intersection_size": null,
     "mismatched_struct_offsets": {
       "Pointer": {
         "folder": "0x87ce5e0",
-        "imtheo": "0x88fc7c8"
+        "imtheo": "0x89abe98"
       }
     },
     "rva_mismatch_rate": null,
