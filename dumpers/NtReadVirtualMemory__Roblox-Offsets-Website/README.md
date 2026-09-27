@@ -6,7 +6,7 @@ Web front-end that publishes FFlags.hpp on main
 
 Upstream license SPDX: {"message":"Not Found","documentation_url":"https://docs.github.com/rest/licenses/licenses#get-the-license-for-a-repository","status":"404"}NOASSERTION
 
-Last mirrored: 2026-09-20T09:38:36Z
+Last mirrored: 2026-09-27T10:24:17Z
 Upstream SHA: 5347dea4bf54aa981a65a9c744eaa3292378ae9a
 Default branch: main
 
