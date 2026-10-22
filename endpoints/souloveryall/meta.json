@@ -1,8 +1,8 @@
 {
-  "fetched_at": "2026-10-21T21:44:02Z",
-  "flag_count": 14861,
-  "roblox_version": "version-cec3ad5889b447cf",
-  "sanity_passed": true,
+  "fetched_at": "2026-10-22T04:49:39Z",
+  "flag_count": 0,
+  "roblox_version": null,
+  "sanity_passed": false,
   "source_url": "https://raw.githubusercontent.com/souloveryall/offsets.hpp/main/Offsets.hpp",
   "verification_reason": "version_skew",
   "verification_report": {
