@@ -1,14 +1,14 @@
 {
-  "fetched_at": "2026-11-10T07:20:24Z",
-  "flag_count": 15307,
-  "roblox_version": "version-f0ea5da9412f4e35",
+  "fetched_at": "2026-11-10T19:44:50Z",
+  "flag_count": 15293,
+  "roblox_version": "version-4ea8e85481e34f46",
   "sanity_passed": true,
   "source_url": "https://dev.imtheo.lol/Offsets/FFlags.hpp",
   "verification_reason": "matches_imtheo",
   "verification_report": {
-    "folder_version": "version-f0ea5da9412f4e35",
-    "imtheo_version": "version-f0ea5da9412f4e35",
-    "intersection_size": 15304,
+    "folder_version": "version-4ea8e85481e34f46",
+    "imtheo_version": "version-4ea8e85481e34f46",
+    "intersection_size": 15290,
     "mismatched_struct_offsets": null,
     "rva_mismatch_rate": 0.0,
     "samples": null
