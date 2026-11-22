@@ -6,7 +6,7 @@ Upstream: https://github.com/pizzaboxer/rbxfflagdumper
 
 Upstream license SPDX: MIT
 
-Last mirrored: 2026-11-15T12:33:15Z
+Last mirrored: 2026-11-22T13:07:42Z
 Upstream SHA: edf8450fb7460ae6ecd1b1942adce7039e1ab45c
 Default branch: main
 

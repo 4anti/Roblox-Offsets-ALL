@@ -6,7 +6,7 @@ C++ offset dumper originally built for SirMeme Hub
 
 Upstream license SPDX: {"message":"Not Found","documentation_url":"https://docs.github.com/rest/licenses/licenses#get-the-license-for-a-repository","status":"404"}NOASSERTION
 
-Last mirrored: 2026-11-15T12:33:15Z
+Last mirrored: 2026-11-22T13:07:42Z
 Upstream SHA: 296714609c9eee5bfbb5c72a38270542455c0f40
 Default branch: main
 
